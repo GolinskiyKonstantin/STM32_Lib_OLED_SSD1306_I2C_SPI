@@ -42,16 +42,18 @@ extern C {
 			//=== SETUP настройки экрана =========================================================
 			
 			// выбираем тип подключения I2C or SPI
-			//	#define	SSD1306_USE_I2C
-				#define	SSD1306_USE_SPI
+				#define	SSD1306_USE_I2C
+			//	#define	SSD1306_USE_SPI
 
 			// выбираем разрешение экрана ( нужное раскомментировать ) ---------------
-
+			
+			//	#define	SSD1306_64x32
 			//	#define	SSD1306_64x48
+			//	#define	SSD1306_72x40
 			//	#define	SSD1306_96x16
 			//	#define	SSD1306_128x32
-			//	#define	SSD1306_128x64
-				#define	SH1106_128x64
+				#define	SSD1306_128x64
+			//	#define	SH1106_128x64
 			//------------------------------------------------------------------
 			
 			
@@ -109,8 +111,17 @@ extern C {
 
 //#########################################################################################################################
 
+#ifdef SSD1306_64x32
+/* SSD1306 width in pixels */
+#ifndef SSD1306_WIDTH
+	#define SSD1306_WIDTH	64
+#endif
+/* SSD1306 LCD height in pixels */
+#ifndef SSD1306_HEIGHT
+	#define SSD1306_HEIGHT	32
+#endif
 
-#ifdef SSD1306_64x48
+#elif defined SSD1306_64x48
 /* SSD1306 width in pixels */
 #ifndef SSD1306_WIDTH
 	#define SSD1306_WIDTH	64
@@ -118,6 +129,16 @@ extern C {
 /* SSD1306 LCD height in pixels */
 #ifndef SSD1306_HEIGHT
 	#define SSD1306_HEIGHT	48
+#endif
+
+#elif defined SSD1306_72x40
+/* SSD1306 width in pixels */
+#ifndef SSD1306_WIDTH
+	#define SSD1306_WIDTH	72
+#endif
+/* SSD1306 LCD height in pixels */
+#ifndef SSD1306_HEIGHT
+	#define SSD1306_HEIGHT	40
 #endif
 
 #elif defined SSD1306_96x16
@@ -289,7 +310,7 @@ void SSD1306_GotoXY(uint16_t x, uint16_t y);
  * @param  color: Color used for drawing. This parameter can be a value of @ref SSD1306_COLOR_t enumeration
  * @retval Character written
  */
-char SSD1306_Putc(char ch, FontDef_t* Font, SSD1306_COLOR_t color);
+void SSD1306_Putc(char ch, FontDef_t* Font, SSD1306_COLOR_t color);
 
 /**
  * @brief  Puts string to internal RAM
@@ -299,7 +320,7 @@ char SSD1306_Putc(char ch, FontDef_t* Font, SSD1306_COLOR_t color);
  * @param  color: Color used for drawing. This parameter can be a value of @ref SSD1306_COLOR_t enumeration
  * @retval Zero on success or character value when function failed
  */
-char SSD1306_Puts(char* str, FontDef_t* Font, SSD1306_COLOR_t color);
+void SSD1306_Puts(char* str, FontDef_t* Font, SSD1306_COLOR_t color);
 
 /**
  * @brief  Draws line on LCD

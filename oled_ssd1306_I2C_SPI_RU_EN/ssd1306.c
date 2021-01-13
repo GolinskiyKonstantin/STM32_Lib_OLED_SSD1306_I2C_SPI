@@ -257,24 +257,26 @@ uint8_t SSD1306_Init(void) {
 	
 	/* Init LCD */
 
-#ifdef SSD1306_64x48
+#ifdef SSD1306_64x32
 //== Init sequence for 64x48 Micro OLED module ============================
     ssd1306_WriteCommand( SSD1306_DISPLAYOFF );
     ssd1306_WriteCommand( SSD1306_SETDISPLAYCLOCKDIV );
 	ssd1306_WriteCommand( 0x80 );  								// the suggested ratio 0x80
     ssd1306_WriteCommand( SSD1306_SETMULTIPLEX );
-	ssd1306_WriteCommand( 0x2F );        
+	ssd1306_WriteCommand( 0x1F );        						// ratio 32 (устанавливаем размер в пикселях по высоте -1 в HEX например 0x27 = 39 ( 40-1 ) )
+	ssd1306_WriteCommand( 0xAD ); 
+	ssd1306_WriteCommand( 0x30 );
     ssd1306_WriteCommand( SSD1306_SETDISPLAYOFFSET );
 	ssd1306_WriteCommand( 0x0 );     							// no offset
-    ssd1306_WriteCommand( SSD1306_SETSTARTLINE | 0x0 );       	// line #0
+    ssd1306_WriteCommand( SSD1306_SETSTARTLINE | 0x00 );       	// line #0
     ssd1306_WriteCommand( SSD1306_CHARGEPUMP );
 	ssd1306_WriteCommand( 0x14 );          						// internal vcc
     ssd1306_WriteCommand( SSD1306_NORMALDISPLAY );
     ssd1306_WriteCommand( SSD1306_DISPLAYALLON_RESUME );
-    ssd1306_WriteCommand( SSD1306_SEGREMAP | 0x1 );            	// column 127 mapped to SEG0
+    ssd1306_WriteCommand( SSD1306_SEGREMAP | 0x01 );            	// column 127 mapped to SEG0
     ssd1306_WriteCommand( SSD1306_COMSCANDEC );                	// column scan direction reversed
     ssd1306_WriteCommand( SSD1306_SETCOMPINS );
-	ssd1306_WriteCommand( 0x12 );          						// 0x12 if height > 32 else 0x02
+	ssd1306_WriteCommand( 0x02 );          						// 0x12 if height > 32 else 0x02 ( если вісота больше 32 ставим 0х12 , если равно 32 или меньше то 0х02 )
     ssd1306_WriteCommand( SSD1306_SETCONTRAST );
 	ssd1306_WriteCommand( 0x7F );         						// contrast level 127
     ssd1306_WriteCommand( SSD1306_SETPRECHARGE );
@@ -284,13 +286,73 @@ uint8_t SSD1306_Init(void) {
     ssd1306_WriteCommand( SSD1306_DISPLAYON );
 //=======================================================================
 
+#elif defined SSD1306_64x48
+//== Init sequence for 64x48 Micro OLED module ============================
+    ssd1306_WriteCommand( SSD1306_DISPLAYOFF );
+    ssd1306_WriteCommand( SSD1306_SETDISPLAYCLOCKDIV );
+	ssd1306_WriteCommand( 0x80 );  								// the suggested ratio 0x80
+    ssd1306_WriteCommand( SSD1306_SETMULTIPLEX );
+	ssd1306_WriteCommand( 0x2F );        						// ratio 32 (устанавливаем размер в пикселях по высоте -1 в HEX например 0x27 = 39 ( 40-1 ) )
+	ssd1306_WriteCommand( 0xAD ); 
+	ssd1306_WriteCommand( 0x30 );
+    ssd1306_WriteCommand( SSD1306_SETDISPLAYOFFSET );
+	ssd1306_WriteCommand( 0x0 );     							// no offset
+    ssd1306_WriteCommand( SSD1306_SETSTARTLINE | 0x00 );       	// line #0
+    ssd1306_WriteCommand( SSD1306_CHARGEPUMP );
+	ssd1306_WriteCommand( 0x14 );          						// internal vcc
+    ssd1306_WriteCommand( SSD1306_NORMALDISPLAY );
+    ssd1306_WriteCommand( SSD1306_DISPLAYALLON_RESUME );
+    ssd1306_WriteCommand( SSD1306_SEGREMAP | 0x01 );            	// column 127 mapped to SEG0
+    ssd1306_WriteCommand( SSD1306_COMSCANDEC );                	// column scan direction reversed
+    ssd1306_WriteCommand( SSD1306_SETCOMPINS );
+	ssd1306_WriteCommand( 0x12 );          						// 0x12 if height > 32 else 0x02 ( если вісота больше 32 ставим 0х12 , если равно 32 или меньше то 0х02 )
+    ssd1306_WriteCommand( SSD1306_SETCONTRAST );
+	ssd1306_WriteCommand( 0x7F );         						// contrast level 127
+    ssd1306_WriteCommand( SSD1306_SETPRECHARGE );
+	ssd1306_WriteCommand( 0xF1 );        						// pre-charge period (1, 15)
+    ssd1306_WriteCommand( SSD1306_SETVCOMDETECT );
+	ssd1306_WriteCommand( 0x40 );       						// vcomh regulator level
+    ssd1306_WriteCommand( SSD1306_DISPLAYON );
+//=======================================================================
+
+#elif defined SSD1306_72x40	
+//== Init sequence for SSD1306 72x40 OLED module ========================
+    ssd1306_WriteCommand( SSD1306_DISPLAYOFF );
+    ssd1306_WriteCommand( SSD1306_SETDISPLAYCLOCKDIV );
+	ssd1306_WriteCommand( 0x80 );  								// the suggested ratio 0x80
+    ssd1306_WriteCommand( SSD1306_SETMULTIPLEX );
+	ssd1306_WriteCommand( 0x27 );								// ratio 32 (устанавливаем размер в пикселях по высоте -1 в HEX например 0x27 = 39 ( 40-1 ) )
+	ssd1306_WriteCommand( 0xAD ); 
+	ssd1306_WriteCommand( 0x30 );	
+    ssd1306_WriteCommand( SSD1306_SETDISPLAYOFFSET );
+	ssd1306_WriteCommand( 0x0 );     							// no offset
+    ssd1306_WriteCommand( SSD1306_SETSTARTLINE | 0x00 );        	// line #0
+    ssd1306_WriteCommand( SSD1306_CHARGEPUMP );
+	ssd1306_WriteCommand( 0x14 );          						// internal vcc
+    ssd1306_WriteCommand( SSD1306_MEMORYMODE );
+	ssd1306_WriteCommand( 0x02 );          						// page mode
+    ssd1306_WriteCommand( SSD1306_SEGREMAP | 0x01 );            	// column 127 mapped to SEG0
+    ssd1306_WriteCommand( SSD1306_COMSCANDEC );                	// column scan direction reversed
+    ssd1306_WriteCommand( SSD1306_SETCOMPINS );
+	ssd1306_WriteCommand( 0x12 );          						// 0x12 if height > 32 else 0x02 ( если вісота больше 32 ставим 0х12 , если равно 32 или меньше то 0х02 )
+    ssd1306_WriteCommand( SSD1306_SETCONTRAST );
+	ssd1306_WriteCommand( 0x7F );         						// contrast level 127
+    ssd1306_WriteCommand( SSD1306_SETPRECHARGE );
+	ssd1306_WriteCommand( 0xF1 );        						// pre-charge period (1, 15)
+    ssd1306_WriteCommand( SSD1306_SETVCOMDETECT );
+	ssd1306_WriteCommand( 0x40 );       						// vcomh regulator level
+    ssd1306_WriteCommand( SSD1306_DISPLAYALLON_RESUME );
+    ssd1306_WriteCommand( SSD1306_NORMALDISPLAY );
+    ssd1306_WriteCommand( SSD1306_DISPLAYON );	
+//=======================================================================
+
 #elif defined SSD1306_96x16	
 //== Init sequence for SSD1306 96x16 OLED module ========================
     ssd1306_WriteCommand( SSD1306_DISPLAYOFF );
     ssd1306_WriteCommand( SSD1306_SETDISPLAYCLOCKDIV );
 	ssd1306_WriteCommand( 0x80 );  								// clock divide ratio and osc frequency
     ssd1306_WriteCommand( SSD1306_SETMULTIPLEX );
-	ssd1306_WriteCommand( 0x0F );        						// multiplex ratio
+	ssd1306_WriteCommand( 0x0F );        						// multiplex ratio ratio 32 (устанавливаем размер в пикселях по высоте -1 в HEX например 0x27 = 39 ( 40-1 ) )
     ssd1306_WriteCommand( SSD1306_SETDISPLAYOFFSET );
 	ssd1306_WriteCommand( 0x0 );     							// display offset zero
     ssd1306_WriteCommand( SSD1306_SETSTARTLINE | 0x0 );        	// set display start line to 0
@@ -298,10 +360,10 @@ uint8_t SSD1306_Init(void) {
 	ssd1306_WriteCommand( 0x14 );          						// charge pump setting enable
     ssd1306_WriteCommand( SSD1306_MEMORYMODE );
 	ssd1306_WriteCommand( 0x00 );          						// page addressing mode
-    ssd1306_WriteCommand( SSD1306_SEGREMAP | 0xA1 );           	// segment remap
+    ssd1306_WriteCommand( SSD1306_SEGREMAP | 0xA1 );           	// segment remap	
     ssd1306_WriteCommand( SSD1306_COMSCANDEC );                	// scan dir reverse
     ssd1306_WriteCommand( SSD1306_SETCOMPINS );
-	ssd1306_WriteCommand( 0x02 );          						// com pin HW config
+	ssd1306_WriteCommand( 0x02 );          						// 0x12 if height > 32 else 0x02 ( если вісота больше 32 ставим 0х12 , если равно 32 или меньше то 0х02 )
     ssd1306_WriteCommand( SSD1306_SETCONTRAST );
 	ssd1306_WriteCommand( 0xAF );         						// set contrast level 0xaf
     ssd1306_WriteCommand( SSD1306_SETPRECHARGE );
@@ -320,7 +382,7 @@ uint8_t SSD1306_Init(void) {
     ssd1306_WriteCommand( SSD1306_SETDISPLAYCLOCKDIV );
 	ssd1306_WriteCommand( 0x80 );  								// the suggested ratio 0x80
     ssd1306_WriteCommand( SSD1306_SETMULTIPLEX );
-	ssd1306_WriteCommand( 0x1F );        						// ratio 32
+	ssd1306_WriteCommand( 0x1F );        						// ratio 32 ratio 32 (устанавливаем размер в пикселях по высоте -1 в HEX например 0x27 = 39 ( 40-1 ) )
     ssd1306_WriteCommand( SSD1306_SETDISPLAYOFFSET );
 	ssd1306_WriteCommand( 0x0 );     							// no offset
     ssd1306_WriteCommand( SSD1306_SETSTARTLINE | 0x0 );        	// line #0
@@ -331,7 +393,7 @@ uint8_t SSD1306_Init(void) {
     ssd1306_WriteCommand( SSD1306_SEGREMAP | 0x1 );            	// column 127 mapped to SEG0
     ssd1306_WriteCommand( SSD1306_COMSCANDEC );                	// column scan direction reversed
     ssd1306_WriteCommand( SSD1306_SETCOMPINS );
-	ssd1306_WriteCommand( 0x02 );          						// sequential COM pins, disable remap
+	ssd1306_WriteCommand( 0x02 );          						// 0x12 if height > 32 else 0x02 ( если вісота больше 32 ставим 0х12 , если равно 32 или меньше то 0х02 )
     ssd1306_WriteCommand( SSD1306_SETCONTRAST );
 	ssd1306_WriteCommand( 0x7F );         						// contrast level 127
     ssd1306_WriteCommand( SSD1306_SETPRECHARGE );
@@ -349,7 +411,7 @@ uint8_t SSD1306_Init(void) {
     ssd1306_WriteCommand( SSD1306_SETDISPLAYCLOCKDIV );
 	ssd1306_WriteCommand( 0x80 );  								// the suggested ratio 0x80 
     ssd1306_WriteCommand( SSD1306_SETMULTIPLEX );
-	ssd1306_WriteCommand( 0x3F );        						// ratio 64
+	ssd1306_WriteCommand( 0x3F );        						// ratio 64 ratio 32 (устанавливаем размер в пикселях по высоте -1 в HEX например 0x27 = 39 ( 40-1 ) )
     ssd1306_WriteCommand( SSD1306_SETDISPLAYOFFSET );
 	ssd1306_WriteCommand( 0x0 );     							// no offset
     ssd1306_WriteCommand( SSD1306_SETSTARTLINE | 0x0 );        	// line #0	// подымаем картинку вверх
@@ -360,7 +422,7 @@ uint8_t SSD1306_Init(void) {
     ssd1306_WriteCommand( SSD1306_SEGREMAP | 0x1 );            	// column 127 mapped to SEG0	// двигаем картинку вправо
     ssd1306_WriteCommand( SSD1306_COMSCANDEC );                	// column scan direction reversed
     ssd1306_WriteCommand( SSD1306_SETCOMPINS );
-	ssd1306_WriteCommand( 0x12 );          						// alt COM pins, disable remap
+	ssd1306_WriteCommand( 0x12 );          						// 0x12 if height > 32 else 0x02 ( если вісота больше 32 ставим 0х12 , если равно 32 или меньше то 0х02 )
     ssd1306_WriteCommand( SSD1306_SETCONTRAST );
 	ssd1306_WriteCommand( 0x7F );         						// contrast level 127
     ssd1306_WriteCommand( SSD1306_SETPRECHARGE );
@@ -378,7 +440,7 @@ uint8_t SSD1306_Init(void) {
   ssd1306_WriteCommand( SSD1306_DISPLAYOFF );
   ssd1306_WriteCommand( SSD1306_SETSTARTPAGE | 0X0 );            	// set page address  
   ssd1306_WriteCommand( SSD1306_SETCONTRAST ); 
-  ssd1306_WriteCommand( 0x80 );             						// 128
+  ssd1306_WriteCommand( 0x80 );             						// 128 ratio 32 (устанавливаем размер в пикселях по высоте -1 в HEX например 0x27 = 39 ( 40-1 ) )
   ssd1306_WriteCommand( SSD1306_SEGREMAP | 0X1 );                	// set segment remap
   ssd1306_WriteCommand( SSD1306_NORMALDISPLAY );                 	// normal / reverse
   ssd1306_WriteCommand( SSD1306_SETMULTIPLEX ); 
@@ -394,7 +456,7 @@ uint8_t SSD1306_Init(void) {
   ssd1306_WriteCommand( SSD1306_SETPRECHARGE ); 
   ssd1306_WriteCommand( 0X1F );            							// set pre-charge period
   ssd1306_WriteCommand( SSD1306_SETCOMPINS ); 
-  ssd1306_WriteCommand( 0X12 );              						// set COM pins
+  ssd1306_WriteCommand( 0X12 );              						// 0x12 if height > 32 else 0x02 ( если вісота больше 32 ставим 0х12 , если равно 32 или меньше то 0х02 )
   ssd1306_WriteCommand( SSD1306_SETVCOMDETECT );  
   ssd1306_WriteCommand( 0x40 );          							// set vcomh
   ssd1306_WriteCommand( SSD1306_DISPLAYON );
@@ -439,6 +501,10 @@ void SSD1306_UpdateScreen(void) {
 			// экран SH1106 имеет больше разрешение 132x64 страниц а сам экран 128 поетому смещаем на 2 
 			ssd1306_WriteCommand(SSD1306_SETLOWCOLUMN + ( 2 & 0x0f ) );
 			ssd1306_WriteCommand(SSD1306_SETHIGHCOLUMN + ( 2 >> 4 ) );
+		#elif defined SSD1306_72x40	
+			// экран SSD1306_72x40 имеет смещение в 28 пикселей, поетому смещаем на 28 и выравниваем картинку
+			ssd1306_WriteCommand(SSD1306_SETLOWCOLUMN + ( 28 & 0x0f ) );
+			ssd1306_WriteCommand(SSD1306_SETHIGHCOLUMN + ( 28 >> 4 ) );
 		#else
 			ssd1306_WriteCommand(SSD1306_SETLOWCOLUMN );
 			ssd1306_WriteCommand(SSD1306_SETHIGHCOLUMN );
@@ -539,59 +605,55 @@ void SSD1306_GotoXY(uint16_t x, uint16_t y) {
 
 	******************************************************************************
 */
-char SSD1306_Putc(char ch, FontDef_t* Font, SSD1306_COLOR_t color) {
+void SSD1306_Putc(char ch, FontDef_t* Font, SSD1306_COLOR_t color) {
 	uint32_t i, b, j;
 	
 	/* Check available space in LCD */
 	if (
-		SSD1306_WIDTH <= (SSD1306.CurrentX + Font->FontWidth) ||
-		SSD1306_HEIGHT <= (SSD1306.CurrentY + Font->FontHeight)
+		SSD1306_WIDTH > (SSD1306.CurrentX + Font->FontWidth) ||
+		SSD1306_HEIGHT > (SSD1306.CurrentY + Font->FontHeight)
 	) {
-		/* Error */
-		return 0;
-	}
 	
-	/* Go through font */
-	for (i = 0; i < Font->FontHeight; i++) {
-		
-		if( ch < 127 ){			
-			b = Font->data[(ch - 32) * Font->FontHeight + i];
-		}
-		
-		else if( (uint8_t) ch > 191 ){
-			// +96 это так как латинские символы и знаки в шрифтах занимают 96 позиций
-			// и если в шрифте который содержит сперва латиницу и спец символы и потом 
-			// только кирилицу то нужно добавлять 95 если шрифт 
-			// содержит только кирилицу то +96 не нужно
-			b = Font->data[((ch - 192) + 96) * Font->FontHeight + i];
-		}
-		
-		else if( (uint8_t) ch == 168 ){	// 168 символ по ASCII - Ё
-			// 160 эллемент ( символ Ё ) 
-			b = Font->data[( 160 ) * Font->FontHeight + i];
-		}
-		
-		else if( (uint8_t) ch == 184 ){	// 184 символ по ASCII - ё
-			// 161 эллемент  ( символ ё ) 
-			b = Font->data[( 161 ) * Font->FontHeight + i];
-		}
-		
-		
-		
-		for (j = 0; j < Font->FontWidth; j++) {
-			if ((b << j) & 0x8000) {
-				SSD1306_DrawPixel(SSD1306.CurrentX + j, (SSD1306.CurrentY + i), (SSD1306_COLOR_t) color);
-			} else {
-				SSD1306_DrawPixel(SSD1306.CurrentX + j, (SSD1306.CurrentY + i), (SSD1306_COLOR_t)!color);
+		/* Go through font */
+		for (i = 0; i < Font->FontHeight; i++) {
+			
+			if( ch < 127 ){			
+				b = Font->data[(ch - 32) * Font->FontHeight + i];
+			}
+			
+			else if( (uint8_t) ch > 191 ){
+				// +96 это так как латинские символы и знаки в шрифтах занимают 96 позиций
+				// и если в шрифте который содержит сперва латиницу и спец символы и потом 
+				// только кирилицу то нужно добавлять 95 если шрифт 
+				// содержит только кирилицу то +96 не нужно
+				b = Font->data[((ch - 192) + 96) * Font->FontHeight + i];
+			}
+			
+			else if( (uint8_t) ch == 168 ){	// 168 символ по ASCII - Ё
+				// 160 эллемент ( символ Ё ) 
+				b = Font->data[( 160 ) * Font->FontHeight + i];
+			}
+			
+			else if( (uint8_t) ch == 184 ){	// 184 символ по ASCII - ё
+				// 161 эллемент  ( символ ё ) 
+				b = Font->data[( 161 ) * Font->FontHeight + i];
+			}
+			
+			
+			
+			for (j = 0; j < Font->FontWidth; j++) {
+				if ((b << j) & 0x8000) {
+					SSD1306_DrawPixel(SSD1306.CurrentX + j, (SSD1306.CurrentY + i), (SSD1306_COLOR_t) color);
+				} else {
+					SSD1306_DrawPixel(SSD1306.CurrentX + j, (SSD1306.CurrentY + i), (SSD1306_COLOR_t)!color);
+				}
 			}
 		}
+		
+		/* Increase pointer */
+		SSD1306.CurrentX += Font->FontWidth;
+	
 	}
-	
-	/* Increase pointer */
-	SSD1306.CurrentX += Font->FontWidth;
-	
-	/* Return character written */
-	return ch;
 }
 //----------------------------------------------------------------------------------
 
@@ -603,21 +665,47 @@ char SSD1306_Putc(char ch, FontDef_t* Font, SSD1306_COLOR_t color) {
 
 	******************************************************************************
 */
-char SSD1306_Puts(char* str, FontDef_t* Font, SSD1306_COLOR_t color) {
-	/* Write characters */
-	while (*str) {
-		/* Write character by character */
-		if (SSD1306_Putc(*str, Font, color) != *str) {
-			/* Return error */
-			return *str;
+void SSD1306_Puts(char* str, FontDef_t* Font, SSD1306_COLOR_t color) {
+	
+	uint16_t len = strlen(str);
+	
+	while (len--) {
+		
+		//---------------------------------------------------------------------
+		// проверка на кириллицу UTF-8, если латиница то пропускаем if
+		// Расширенные символы ASCII Win-1251 кириллица (код символа 128-255)
+		// проверяем первый байт из двух ( так как UTF-8 ето два байта )
+		// если он больше либо равен 0xC0 ( первый байт в кириллеце будет равен 0xD0 либо 0xD1 именно в алфавите )
+		if ( (uint8_t)*str >= 0xC0 ){	// код 0xC0 соответствует символу кириллица 'A' по ASCII Win-1251
+			
+			// проверяем какой именно байт первый 0xD0 либо 0xD1
+			switch ((uint8_t)*str) {
+				case 0xD0: {
+					// увеличиваем массив так как нам нужен второй байт
+					str++;
+					// проверяем второй байт там сам символ
+					if ((uint8_t)*str == 0x81) { *str = 0xA8; break; }		// байт символа Ё ( если нужнф еще символы добавляем тут и в функции DrawChar() )
+					if ((uint8_t)*str >= 0x90 && (uint8_t)*str <= 0xBF){ *str = (*str) + 0x30; }	// байт символов А...Я а...п  делаем здвиг на +48
+					break;
+				}
+				case 0xD1: {
+					// увеличиваем массив так как нам нужен второй байт
+					str++;
+					// проверяем второй байт там сам символ
+					if ((uint8_t)*str == 0x91) { *str = 0xB8; break; }		// байт символа ё ( если нужнф еще символы добавляем тут и в функции DrawChar() )
+					if ((uint8_t)*str >= 0x80 && (uint8_t)*str <= 0x8F){ *str = (*str) + 0x70; }	// байт символов п...я	елаем здвиг на +112
+					break;
+				}
+			}
+			// уменьшаем еще переменную так как израсходывали 2 байта для кириллицы
+			len--;
 		}
+		//---------------------------------------------------------------------
+		SSD1306_Putc(*str, Font, color);
 		
 		/* Increase string pointer */
 		str++;
 	}
-	
-	/* Everything OK, zero should be returned */
-	return *str;
 }
  
 //----------------------------------------------------------------------------------
