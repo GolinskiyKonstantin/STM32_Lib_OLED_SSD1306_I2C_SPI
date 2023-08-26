@@ -35,6 +35,7 @@ extern C {
 
 #include "stdlib.h"
 #include "string.h"
+#include "math.h"
 
 //#######  SETUP  ############################################################################################################
 
@@ -183,6 +184,9 @@ extern C {
 
 
 #endif
+
+
+#define PI 	3.14159265
 
 //--------------------------------------------------------------------------------------
 
@@ -502,7 +506,8 @@ void SSD1306_DrawFillRoundRect(int16_t x, int16_t y, uint16_t width, uint16_t he
 //==============================================================================
 void SSD1306_DrawRoundRect(int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t cornerRadius, SSD1306_COLOR_t color);
 //==============================================================================
-
+void SSD1306_DrawLineThick(int16_t x1, int16_t y1, int16_t x2, int16_t y2, SSD1306_COLOR_t color, uint8_t thick) ;
+void SSD1306_DrawArc(int16_t x0, int16_t y0, int16_t radius, int16_t startAngle, int16_t endAngle, SSD1306_COLOR_t color, uint8_t thick);
 
 /* C++ detection */
 #ifdef __cplusplus
