@@ -1167,7 +1167,7 @@ void SSD1306_DrawFillRoundRect(int16_t x, int16_t y, uint16_t width, uint16_t he
     cornerRadius = max_radius;
 	}
 	
-  SSD1306_DrawRectangleFilled(x + cornerRadius, y, x + cornerRadius + width - 2 * cornerRadius, y + height, color);
+  SSD1306_DrawRectangle(x + cornerRadius, y, x + cornerRadius + width - 2 * cornerRadius, y + height, color);
   // draw four corners
   SSD1306_DrawFillCircleHelper(x + width - cornerRadius - 1, y + cornerRadius, cornerRadius, 1, height - 2 * cornerRadius - 1, color);
   SSD1306_DrawFillCircleHelper(x + cornerRadius, y + cornerRadius, cornerRadius, 2, height - 2 * cornerRadius - 1, color);
@@ -1249,7 +1249,7 @@ void SSD1306_DrawCircleHelper(int16_t x0, int16_t y0, int16_t radius, int8_t qua
         }
         if (quadrantMask & 0x2) {
 			SSD1306_DrawPixel(x0 + x, y0 - y, color);
-            ST7735_DrawPixel(x0 + y, y0 - x, color);
+            SSD1306_DrawPixel(x0 + y, y0 - x, color);
         }
         if (quadrantMask & 0x8) {
 			SSD1306_DrawPixel(x0 - y, y0 + x, color);
@@ -1298,7 +1298,7 @@ void SSD1306_DrawLineThick(int16_t x1, int16_t y1, int16_t x2, int16_t y2, SSD13
 	int16_t error = deltaX - deltaY;
 
 	if (thick > 1){
-		SSD1306_DrawCircleFilled(x2, y2, thick >> 1, color);
+		SSD1306_DrawCircle(x2, y2, thick >> 1, color);
 	}
 	else{
 		SSD1306_DrawPixel(x2, y2, color);
@@ -1306,7 +1306,7 @@ void SSD1306_DrawLineThick(int16_t x1, int16_t y1, int16_t x2, int16_t y2, SSD13
 
 	while (x1 != x2 || y1 != y2) {
 		if (thick > 1){
-			SSD1306_DrawCircleFilled(x1, y1, thick >> 1, color);
+			SSD1306_DrawCircle(x1, y1, thick >> 1, color);
 		}
 		else{
 			SSD1306_DrawPixel(x1, y1, color);
