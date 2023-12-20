@@ -230,8 +230,6 @@ uint8_t SSD1306_Init(void) {
 	ssd1306_Reset();
 	
 	#if defined(SSD1306_USE_I2C)
-	// Init I2C ------------------------------------------------------------------
-	ssd1306_I2C_Init();
 	
 	/* Check if LCD connected to I2C */
 	if (HAL_I2C_IsDeviceReady(&SSD1306_I2C_PORT, SSD1306_I2C_ADDR, 1, 20000) != HAL_OK) {
@@ -1331,32 +1329,375 @@ void SSD1306_DrawLineThick(int16_t x1, int16_t y1, int16_t x2, int16_t y2, SSD13
 void SSD1306_DrawArc(int16_t x0, int16_t y0, int16_t radius, int16_t startAngle, int16_t endAngle, SSD1306_COLOR_t color, uint8_t thick) {
 	
 	int16_t xLast = -1, yLast = -1;
-	startAngle -= 90;
-	endAngle -= 90;
 
-	for (int16_t angle = startAngle; angle <= endAngle; angle += 2) {
-		float angleRad = (float) angle * PI / 180;
-		int x = cos(angleRad) * radius + x0;
-		int y = sin(angleRad) * radius + y0;
+    if (startAngle > endAngle) {
+        // Рисование первой части дуги от startAngle до 360 градусов
+        for (int16_t angle = startAngle; angle <= 360; angle += 2) {
+            float angleRad = (float)(360 - angle) * PI / 180;
+            int x = cos(angleRad) * radius + x0;
+            int y = sin(angleRad) * radius + y0;
 
-		if (xLast == -1 || yLast == -1) {
-			xLast = x;
-			yLast = y;
-			continue;
+            if (xLast != -1 && yLast != -1) {
+                if (thick > 1) {
+                    SSD1306_DrawLineThick(xLast, yLast, x, y, color, thick);
+                } else {
+                    SSD1306_DrawLine(xLast, yLast, x, y, color);
+                }
+            }
+
+            xLast = x;
+            yLast = y;
+        }
+
+        // Рисование второй части дуги от 0 до endAngle
+        for (int16_t angle = 0; angle <= endAngle; angle += 2) {
+            float angleRad = (float)(360 - angle) * PI / 180;
+            int x = cos(angleRad) * radius + x0;
+            int y = sin(angleRad) * radius + y0;
+
+            if (xLast != -1 && yLast != -1) {
+                if (thick > 1) {
+                    SSD1306_DrawLineThick(xLast, yLast, x, y, color, thick);
+                } else {
+                    SSD1306_DrawLine(xLast, yLast, x, y, color);
+                }
+            }
+
+            xLast = x;
+            yLast = y;
+        }
+    } else {
+        // Рисование дуги от startAngle до endAngle
+        for (int16_t angle = startAngle; angle <= endAngle; angle += 2) {
+            float angleRad = (float)(360 - angle) * PI / 180;
+            int x = cos(angleRad) * radius + x0;
+            int y = sin(angleRad) * radius + y0;
+
+            if (xLast != -1 && yLast != -1) {
+                if (thick > 1) {
+                    SSD1306_DrawLineThick(xLast, yLast, x, y, color, thick);
+                } else {
+                    SSD1306_DrawLine(xLast, yLast, x, y, color);
+                }
+            }
+
+            xLast = x;
+            yLast = y;
+        }
+    }
+}
+//==============================================================================
+
+
+//==============================================================================
+// линия толстая нужной длины и указаным углом поворота (0-360) ( последний параметр толшина )
+//==============================================================================
+void SSD1306_DrawLineThickWithAngle(int16_t x, int16_t y, int16_t length, double angle_degrees, SSD1306_COLOR_t color, uint8_t thick) {
+    double angleRad = (360.0 - angle_degrees) * PI / 180.0;
+    int16_t x2 = x + (int16_t)(cos(angleRad) * length) + 0.5;
+    int16_t y2 = y + (int16_t)(sin(angleRad) * length) + 0.5;
+
+    SSD1306_DrawLineThick(x, y, x2, y2, color, thick);
+}
+//==============================================================================
+
+
+//==============================================================================
+// Процедура рисования иконки монохромной с указаным углом
+//==============================================================================
+void SSD1306_DrawBitmapWithAngle(int16_t x, int16_t y, const unsigned char* bitmap, int16_t w, int16_t h, SSD1306_COLOR_t color, double angle_degrees) {
+    // Преобразование угла в радианы
+    double angle_radians = (360.0 - angle_degrees) * PI / 180.0;
+
+    // Вычисление матрицы поворота
+    double cosTheta = cos(angle_radians);
+    double sinTheta = sin(angle_radians);
+
+    // Ширина и высота повернутого изображения
+    int16_t rotatedW = round(fabs(w * cosTheta) + fabs(h * sinTheta));
+    int16_t rotatedH = round(fabs(h * cosTheta) + fabs(w * sinTheta));
+
+    // Вычисление центральных координат повернутого изображения
+    int16_t centerX = x + w / 2;
+    int16_t centerY = y + h / 2;
+
+    // Проходим по каждому пикселю изображения и рисуем его повернутым
+    for (int16_t j = 0; j < h; j++) {
+        for (int16_t i = 0; i < w; i++) {
+            // Вычисление смещения от центра
+            int16_t offsetX = i - w / 2;
+            int16_t offsetY = j - h / 2;
+
+            // Применение матрицы поворота
+            int16_t rotatedX = round(centerX + offsetX * cosTheta - offsetY * sinTheta);
+            int16_t rotatedY = round(centerY + offsetX * sinTheta + offsetY * cosTheta);
+
+            // Проверка находится ли пиксель в пределах экрана
+            if (rotatedX >= 0 && rotatedX < SSD1306_WIDTH && rotatedY >= 0 && rotatedY < SSD1306_HEIGHT) {
+                // Получение цвета пикселя из исходного изображения
+                uint8_t byteWidth = (w + 7) / 8;
+                uint8_t byte = (*(const unsigned char*)(&bitmap[j * byteWidth + i / 8]));
+                if (byte & (0x80 >> (i & 7))) {
+                    // Рисование пикселя на экране
+                    SSD1306_DrawPixel(rotatedX, rotatedY, color);
+                }
+            }
+        }
+    }
+}
+//==============================================================================
+
+
+
+//==============================================================================
+// Процедура рисования символа с указаным углом ( 1 буква или знак )
+//==============================================================================
+void SSD1306_PutcWithAngle(char ch, FontDef_t* Font, SSD1306_COLOR_t color, double angle_degrees){
+	
+	uint32_t i, b, j;
+  
+	// Преобразуем угол в радианы
+	double radians = (360.0 - angle_degrees) * PI / 180.0;
+
+	// Вычисляем матрицу поворота
+	double cosAngle = cos(radians);
+	double sinAngle = sin(radians);
+
+	// Переменные для преобразованных координат
+	double newX, newY;
+	
+
+		/* Check available space in LCD */
+	if (
+		SSD1306_WIDTH > (SSD1306.CurrentX + Font->FontWidth) ||
+		SSD1306_HEIGHT > (SSD1306.CurrentY + Font->FontHeight)
+	) {
+	
+		/* Go through font */
+		for (i = 0; i < Font->FontHeight; i++) {
+			
+			if( ch < 127 ){			
+				b = Font->data[(ch - 32) * Font->FontHeight + i];
+			}
+			
+			else if( (uint8_t) ch > 191 ){
+				// +96 это так как латинские символы и знаки в шрифтах занимают 96 позиций
+				// и если в шрифте который содержит сперва латиницу и спец символы и потом 
+				// только кирилицу то нужно добавлять 95 если шрифт 
+				// содержит только кирилицу то +96 не нужно
+				b = Font->data[((ch - 192) + 96) * Font->FontHeight + i];
+			}
+			
+			else if( (uint8_t) ch == 168 ){	// 168 символ по ASCII - Ё
+				// 160 эллемент ( символ Ё ) 
+				b = Font->data[( 160 ) * Font->FontHeight + i];
+			}
+			
+			else if( (uint8_t) ch == 184 ){	// 184 символ по ASCII - ё
+				// 161 эллемент  ( символ ё ) 
+				b = Font->data[( 161 ) * Font->FontHeight + i];
+			}
+			
+			//----  Украинская раскладка ----------------------------------------------------
+			else if( (uint8_t) ch == 170 ){	// 168 символ по ASCII - Є
+				// 162 эллемент ( символ Є )
+				b = Font->data[( 162 ) * Font->FontHeight + i];
+			}
+			else if( (uint8_t) ch == 175 ){	// 184 символ по ASCII - Ї
+				// 163 эллемент  ( символ Ї )
+				b = Font->data[( 163 ) * Font->FontHeight + i];
+			}
+			else if( (uint8_t) ch == 178 ){	// 168 символ по ASCII - І
+				// 164 эллемент ( символ І )
+				b = Font->data[( 164 ) * Font->FontHeight + i];
+			}
+			else if( (uint8_t) ch == 179 ){	// 184 символ по ASCII - і
+				// 165 эллемент  ( символ і )
+				b = Font->data[( 165 ) * Font->FontHeight + i];
+			}
+			else if( (uint8_t) ch == 186 ){	// 184 символ по ASCII - є
+				// 166 эллемент  ( символ є )
+				b = Font->data[( 166 ) * Font->FontHeight + i];
+			}
+			else if( (uint8_t) ch == 191 ){	// 168 символ по ASCII - ї
+				// 167 эллемент ( символ ї )
+				b = Font->data[( 167 ) * Font->FontHeight + i];
+			}
+			//-----------------------------------------------------------------------------
+			
+			for (j = 0; j < Font->FontWidth; j++) {
+				// Применяем поворот к координатам
+				newX = SSD1306.CurrentX + cosAngle * j - sinAngle * i + 0.5;
+				newY = SSD1306.CurrentY + sinAngle * j + cosAngle * i + 0.5;
+				
+				if ((b << j) & 0x8000) {
+					SSD1306_DrawPixel(newX, newY, (SSD1306_COLOR_t) color);
+				} else {
+					SSD1306_DrawPixel(newX, newY, (SSD1306_COLOR_t)!color);
+				}
+			}
 		}
-
-		if (thick > 1){
-			SSD1306_DrawLineThick(xLast, yLast, x, y, color, thick);
-		}
-		else{
-			SSD1306_DrawLine(xLast, yLast, x, y, color);
-		}
-
-		xLast = x;
-		yLast = y;
 	}
 }
 //==============================================================================
+
+
+//==============================================================================
+// Процедура рисования строки с указаным углом
+//==============================================================================
+void SSD1306_PutsWithAngle(char* str, FontDef_t* Font, SSD1306_COLOR_t color, double angle_degrees){	
+
+	unsigned char buff_char;
+	
+	uint16_t len = strlen(str);
+	
+	while (len--) {
+		
+		//---------------------------------------------------------------------
+		// проверка на кириллицу UTF-8, если латиница то пропускаем if
+		// Расширенные символы ASCII Win-1251 кириллица (код символа 128-255)
+		// проверяем первый байт из двух ( так как UTF-8 ето два байта )
+		// если он больше либо равен 0xC0 ( первый байт в кириллеце будет равен 0xD0 либо 0xD1 именно в алфавите )
+		if ( (uint8_t)*str >= 0xC0 ){	// код 0xC0 соответствует символу кириллица 'A' по ASCII Win-1251
+			
+			// проверяем какой именно байт первый 0xD0 либо 0xD1---------------------------------------------
+			switch ((uint8_t)*str) {
+				case 0xD0: {
+					// увеличиваем массив так как нам нужен второй байт
+					str++;
+					// проверяем второй байт там сам символ
+					if ((uint8_t)*str >= 0x90 && (uint8_t)*str <= 0xBF){ buff_char = (*str) + 0x30; }	// байт символов А...Я а...п  делаем здвиг на +48
+					else if ((uint8_t)*str == 0x81) { buff_char = 0xA8; break; }		// байт символа Ё ( если нужнф еще символы добавляем тут и в функции DrawChar() )
+					else if ((uint8_t)*str == 0x84) { buff_char = 0xAA; break; }		// байт символа Є ( если нужнф еще символы добавляем тут и в функции DrawChar() )
+					else if ((uint8_t)*str == 0x86) { buff_char = 0xB2; break; }		// байт символа І ( если нужнф еще символы добавляем тут и в функции DrawChar() )
+					else if ((uint8_t)*str == 0x87) { buff_char = 0xAF; break; }		// байт символа Ї ( если нужнф еще символы добавляем тут и в функции DrawChar() )
+					break;
+				}
+				case 0xD1: {
+					// увеличиваем массив так как нам нужен второй байт
+					str++;
+					// проверяем второй байт там сам символ
+					if ((uint8_t)*str >= 0x80 && (uint8_t)*str <= 0x8F){ buff_char = (*str) + 0x70; }	// байт символов п...я	елаем здвиг на +112
+					else if ((uint8_t)*str == 0x91) { buff_char = 0xB8; break; }		// байт символа ё ( если нужнф еще символы добавляем тут и в функции DrawChar() )
+					else if ((uint8_t)*str == 0x94) { buff_char = 0xBA; break; }		// байт символа є ( если нужнф еще символы добавляем тут и в функции DrawChar() )
+					else if ((uint8_t)*str == 0x96) { buff_char = 0xB3; break; }		// байт символа і ( если нужнф еще символы добавляем тут и в функции DrawChar() )
+					else if ((uint8_t)*str == 0x97) { buff_char = 0xBF; break; }		// байт символа ї ( если нужнф еще символы добавляем тут и в функции DrawChar() )
+					break;
+				}
+			}
+			//------------------------------------------------------------------------------------------------
+			// уменьшаем еще переменную так как израсходывали 2 байта для кириллицы
+			len--;
+			
+			SSD1306_PutcWithAngle(buff_char, Font, color, angle_degrees);
+		}
+		//---------------------------------------------------------------------
+		else{
+			SSD1306_PutcWithAngle(*str, Font, color, angle_degrees);
+		}
+		// Смещаем начальные координаты с каждым символом с учетом угла
+		SSD1306.CurrentX += (Font->FontWidth * cos((360.0 - angle_degrees) * PI / 180.0) + 0.5);
+		SSD1306.CurrentY += (Font->FontWidth * sin((360.0 - angle_degrees) * PI / 180.0) + 0.5);
+
+		// Increase string pointer
+		str++;
+	}
+}
+//==============================================================================
+
+
+//==============================================================================
+// рисуем элипс
+//==============================================================================
+void SSD1306_DrawEllipse(int16_t x0, int16_t y0, int16_t radiusX, int16_t radiusY, SSD1306_COLOR_t color) {
+    int x, y;
+    for (float angle = 0; angle <= 360; angle += 0.1) {
+        x = x0 + radiusX * cos(angle * PI / 180);
+        y = y0 + radiusY * sin(angle * PI / 180);
+        SSD1306_DrawPixel(x, y, color);
+    }
+}
+//==============================================================================
+
+
+//==============================================================================
+// рисуем элипс под указаным углом наклона
+//==============================================================================
+void SSD1306_DrawEllipseWithAngle(int16_t x0, int16_t y0, int16_t radiusX, int16_t radiusY, float angle_degrees, SSD1306_COLOR_t color) {
+    float cosAngle = cos((360.0 - angle_degrees) * PI / 180);
+    float sinAngle = sin((360.0 - angle_degrees) * PI / 180);
+
+    for (int16_t t = 0; t <= 360; t++) {
+        float radians = t * PI / 180.0;
+        int16_t x = radiusX * cos(radians);
+        int16_t y = radiusY * sin(radians);
+
+        int16_t xTransformed = x0 + cosAngle * x - sinAngle * y;
+        int16_t yTransformed = y0 + sinAngle * x + cosAngle * y;
+
+        SSD1306_DrawPixel(xTransformed, yTransformed, color);
+    }
+}
+//==============================================================================
+
+
+//==============================================================================
+// рисуем элипс закрашенный
+//==============================================================================
+void SSD1306_DrawEllipseFilled(int16_t x0, int16_t y0, int16_t radiusX, int16_t radiusY, SSD1306_COLOR_t color) {
+	int x, y;
+
+	for (y = -radiusY; y <= radiusY; y++) {
+			for (x = -radiusX; x <= radiusX; x++) {
+					if ((x * x * radiusY * radiusY + y * y * radiusX * radiusX) <= (radiusX * radiusX * radiusY * radiusY)) {
+							SSD1306_DrawPixel(x0 + x, y0 + y, color);
+					}
+			}
+	}
+}
+//==============================================================================
+
+
+//==============================================================================
+// рисуем элипс закрашенный под указаным углом наклона
+//==============================================================================
+void SSD1306_DrawEllipseFilledWithAngle(int16_t x0, int16_t y0, int16_t radiusX, int16_t radiusY, float angle_degrees, SSD1306_COLOR_t color) {
+   float cosAngle = cos((360.0 - angle_degrees) * PI / 180.0);
+    float sinAngle = sin((360.0 - angle_degrees) * PI / 180.0);
+
+    for (int16_t y = -radiusY; y <= radiusY; y++) {
+        for (int16_t x = -radiusX; x <= radiusX; x++) {
+          float xTransformed = cosAngle * x - sinAngle * y;
+          float yTransformed = sinAngle * x + cosAngle * y;
+
+					if ((x * x * radiusY * radiusY + y * y * radiusX * radiusX) <= (radiusX * radiusX * radiusY * radiusY)){
+             SSD1306_DrawPixel(x0 + xTransformed, y0  + yTransformed, color);
+          }
+        }
+    }
+}
+//==============================================================================
+
+
+//==============================================================================
+// Процедура рисования линии с указаным углом и длиной
+//==============================================================================
+void SSD1306_DrawLineWithAngle(int16_t x, int16_t y, uint16_t length, double angle_degrees, SSD1306_COLOR_t color) {
+    // Преобразование угла в радианы
+    double angle_radians = (360.0 - angle_degrees) * PI / 180.0;
+
+    // Вычисление конечных координат
+    int16_t x2 = x + length * cos(angle_radians) + 0.5;
+    int16_t y2 = y + length * sin(angle_radians) + 0.5;
+
+    // Используем существующую функцию для рисования линии
+    SSD1306_DrawLine(x, y, x2, y2, color);
+}
+//==============================================================================
+
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  _____ ___   _____ 
 // |_   _|__ \ / ____|
@@ -1368,26 +1709,6 @@ void SSD1306_DrawArc(int16_t x0, int16_t y0, int16_t radius, int16_t startAngle,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //----------------------------------------------------------------------------------
 
-/*
-	******************************************************************************
-	* @brief	 ( описание ):  
-	* @param	( параметры ):	
-	* @return  ( возвращает ):	
-
-	******************************************************************************
-*/
-void ssd1306_I2C_Init() {
-	//MX_I2C1_Init();
-	uint32_t p = 250000;
-	while(p>0)
-		p--;
-	//HAL_I2C_DeInit(&SSD1306_I2C_PORT);
-	//p = 250000;
-	//while(p>0)
-	//	p--;
-	//MX_I2C1_Init();
-}
-//----------------------------------------------------------------------------------
 
 /*
 	******************************************************************************
